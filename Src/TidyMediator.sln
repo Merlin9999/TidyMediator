@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35828.75
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TidyMediator.Test", "TidyMediatorTest\TidyMediator.Test.csproj", "{27868005-66B7-4F78-9BF4-9792ED2EE75B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TidyMediator", "TidyMediator\TidyMediator.csproj", "{338709ED-A76F-4747-896F-956D32B6066B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{27868005-66B7-4F78-9BF4-9792ED2EE75B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{27868005-66B7-4F78-9BF4-9792ED2EE75B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{27868005-66B7-4F78-9BF4-9792ED2EE75B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{27868005-66B7-4F78-9BF4-9792ED2EE75B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{338709ED-A76F-4747-896F-956D32B6066B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{338709ED-A76F-4747-896F-956D32B6066B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{338709ED-A76F-4747-896F-956D32B6066B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{338709ED-A76F-4747-896F-956D32B6066B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {EC58A8C8-046B-4B4A-BC9B-8E41A4A1B1DB}
+	EndGlobalSection
+EndGlobal
