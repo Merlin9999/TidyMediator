@@ -27,7 +27,7 @@ namespace TidyMediator
             var behaviorInfos = this._pipelineBuilder.ResolveForRequest(requestType, isAsync: false);
 
             var behaviors = behaviorInfos
-                .Select(info => this._serviceProvider.GetRequiredService(info.behaviorType.MakeGenericType(requestType, typeof(TResult))))
+                .Select(info => this._serviceProvider.GetRequiredService(info.BehaviorType.MakeGenericType(requestType, typeof(TResult))))
                 .Cast<dynamic>()
                 .ToList();
 
@@ -37,7 +37,7 @@ namespace TidyMediator
                 .AsEnumerable()
                 .Reverse()
                 .Aggregate((RequestHandlerDelegate<TResult>)HandlerDelegate,
-                    (next, behavior) => () => behavior.Handle((dynamic)request, next, cancellationToken));
+                    (next, behavior) => async () => await behavior.Handle((dynamic)request, next, cancellationToken));
 
             return pipeline();
         }
@@ -47,7 +47,7 @@ namespace TidyMediator
             var handlers = this._serviceProvider.GetServices<INotificationHandler<TNotification>>().ToList();
             var behaviorInfos = this._pipelineBuilder.ResolveForRequest(typeof(TNotification), isAsync: false);
             var behaviors = behaviorInfos
-                .Select(info => this._serviceProvider.GetRequiredService(info.behaviorType.MakeGenericType(typeof(TNotification), typeof(Unit))))
+                .Select(info => this._serviceProvider.GetRequiredService(info.BehaviorType.MakeGenericType(typeof(TNotification), typeof(Unit))))
                 .Cast<dynamic>()
                 .ToList();
 
@@ -55,7 +55,7 @@ namespace TidyMediator
                 .AsEnumerable()
                 .Reverse()
                 .Aggregate((RequestHandlerDelegate<Unit>)HandlerDelegate,
-                    (next, behavior) => () => behavior.Handle(notification, next, cancellationToken));
+                    (next, behavior) => async () => await behavior.Handle(notification, next, cancellationToken));
             
             async Task<Unit> HandlerDelegate()
             {
@@ -67,38 +67,28 @@ namespace TidyMediator
             await pipeline();
         }
 
-        //public IAsyncEnumerable<TItem> Stream<TQuery, TItem>(TQuery request, CancellationToken cancellationToken = default)
-        //    where TRequest : IRequest<IAsyncEnumerable<TItem>>
-        //{
-        //    var handler = this._serviceProvider.GetRequiredService<IAsyncQueryHandler<TQuery, TItem>>();
-        //    var behaviors = this._serviceProvider.GetServices<IAsyncPipelineBehavior<TQuery, TItem>>().ToList();
+        public IAsyncEnumerable<TItem> Stream<TItem>(IAsyncRequest<TItem> request, CancellationToken cancellationToken = default)
+        {
+            var requestType = request.GetType();
+            var handlerType = typeof(IAsyncRequestHandler<,>).MakeGenericType(requestType, typeof(TItem));
+            var handler = (dynamic)this._serviceProvider.GetRequiredService(handlerType);
 
-        //    Func<IAsyncEnumerable<TItem>> next = () => handler.Handle(request, cancellationToken);
+            var behaviorInfos = this._pipelineBuilder.ResolveForRequest(requestType, isAsync: true);
 
-        //    foreach (var behavior in behaviors.AsEnumerable().Reverse())
-        //    {
-        //        var current = next;
-        //        next = () => behavior.Handle(request, current, cancellationToken);
-        //    }
+            var behaviors = behaviorInfos
+                .Select(info => this._serviceProvider.GetRequiredService(info.BehaviorType.MakeGenericType(requestType, typeof(TItem))))
+                .Cast<dynamic>()
+                .ToList();
 
-        //    return next();
-        //}
+            Func<IAsyncEnumerable<TItem>> pipeline = () => handler.Handle((dynamic)request, cancellationToken);
 
-        //public IAsyncEnumerable<TItem> Stream<TRequest, TItem>(TRequest request, CancellationToken cancellationToken = default)
-        //    where TRequest : IRequest<IAsyncEnumerable<TItem>>
-        //{
-        //    var handler = _provider.GetRequiredService<IAsyncQueryHandler<TRequest, TItem>>();
-        //    var behaviors = _provider.GetServices<IAsyncPipelineBehavior<TRequest, TItem>>().ToList();
+            foreach (dynamic behavior in behaviors.AsEnumerable().Reverse())
+            {
+                var current = pipeline;
+                pipeline = () => behavior.Handle(request, current, cancellationToken);
+            }
 
-        //    Func<IAsyncEnumerable<TItem>> next = () => handler.Handle(request, cancellationToken);
-
-        //    foreach (var behavior in behaviors.AsEnumerable().Reverse())
-        //    {
-        //        var current = next;
-        //        next = () => behavior.Handle(request, current, cancellationToken);
-        //    }
-
-        //    return next();
-        //}
+            return pipeline();
+        }
     }
 }

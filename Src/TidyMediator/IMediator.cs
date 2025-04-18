@@ -22,10 +22,10 @@ namespace TidyMediator
 
     public interface IAsyncRequest<TItem> { }
 
-    //public interface IAsyncRequestHandler<in TRequest, out TItem> where TRequest : IAsyncRequest<TItem>
-    //{
-    //    IAsyncEnumerable<TItem> Handle(TRequest query, CancellationToken cancellationToken);
-    //}
+    public interface IAsyncRequestHandler<in TRequest, out TItem> where TRequest : IAsyncRequest<TItem>
+    {
+        IAsyncEnumerable<TItem> Handle(TRequest query, CancellationToken cancellationToken);
+    }
 
 
 
@@ -36,10 +36,10 @@ namespace TidyMediator
         Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken);
     }
 
-    //public interface IAsyncPipelineBehavior<in TRequest, TItem>
-    //{
-    //    IAsyncEnumerable<TItem> Handle(TRequest request, Func<IAsyncEnumerable<TItem>> next, CancellationToken cancellationToken);
-    //}
+    public interface IAsyncPipelineBehavior<in TRequest, TItem>
+    {
+        IAsyncEnumerable<TItem> Handle(TRequest request, Func<IAsyncEnumerable<TItem>> next, CancellationToken cancellationToken);
+    }
 
     public struct Unit
     {
@@ -50,6 +50,6 @@ namespace TidyMediator
     {
         Task<TResult> Send<TResult>(IRequest<TResult> request, CancellationToken cancellationToken = default);
         Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default) where TNotification : INotification;
-        //IAsyncEnumerable<TItem> Stream<TRequest, TItem>(TRequest request, CancellationToken cancellationToken = default) where TRequest : IAsyncRequest<TItem>;
+        IAsyncEnumerable<TItem> Stream<TItem>(IAsyncRequest<TItem> request, CancellationToken cancellationToken = default);
     }
 }
