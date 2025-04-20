@@ -25,7 +25,7 @@ namespace TidyMediator
 
             services.RegisterDerivedTypesAsTransient(typeof(IRequestHandler<,>));
             services.RegisterDerivedTypesAsTransient(typeof(INotificationHandler<>));
-            services.RegisterDerivedTypesAsTransient(typeof(IAsyncRequestHandler<,>));
+            services.RegisterDerivedTypesAsTransient(typeof(IStreamRequestHandler<,>));
 
             return services;
         }
@@ -79,6 +79,11 @@ namespace TidyMediator
             return null;
         }
 
+        /// <summary>
+        /// Returns true if the type implements or inherits from the specified base type.
+        /// The derived type and the base type can both be generic type definitions (e.g.
+        /// with generic type parameters unspecified).
+        /// </summary>
         public static bool ImplementsOrInheritsFrom(this Type type, Type baseType)
         {
             if (type == null || baseType == null)

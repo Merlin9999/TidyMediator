@@ -170,7 +170,7 @@ public class MediatorTest
     public async Task StreamRequest()
     {
         IMediator mediator = BuildServiceProvider().GetRequiredService<IMediator>();
-        IAsyncEnumerable<TestAsyncItem> stream = mediator.Stream(new TestAsyncUniversalRequest());
+        IAsyncEnumerable<TestAsyncItem> stream = mediator.Stream(new TestStreamUniversalRequest());
 
         var list = new List<TestAsyncItem>();
         await foreach (TestAsyncItem item in stream)
@@ -185,7 +185,7 @@ public class MediatorTest
     public async Task StreamRequestWithSharedResponseType()
     {
         IMediator mediator = BuildServiceProvider().GetRequiredService<IMediator>();
-        IAsyncEnumerable<TestAsyncItem> stream = mediator.Stream(new SpecifyAsyncValuesRequest() { RangeStart = 40, RangeCount = 3});
+        IAsyncEnumerable<TestAsyncItem> stream = mediator.Stream(new SpecifyStreamValuesRequest() { RangeStart = 40, RangeCount = 3 });
 
         var list = new List<TestAsyncItem>();
         await foreach (TestAsyncItem item in stream)
@@ -202,14 +202,13 @@ public class MediatorTest
         IServiceProvider serviceProvider = BuildServiceProvider(cfg =>
         {
             cfg.ServiceCollection.AddSingleton<RequestSequenceCache>();
-            //cfg.AddGlobalBehavior(typeof(RequestTrackingBehavior<,>));
-            cfg.AddGlobalBehavior(typeof(RequestAsyncTrackingBehavior<,>));
+            cfg.AddGlobalBehavior(typeof(RequestStreamTrackingBehavior<,>));
         });
         IMediator mediator = serviceProvider.GetRequiredService<IMediator>();
         RequestSequenceCache cache = serviceProvider.GetRequiredService<RequestSequenceCache>();
 
-        IAsyncEnumerable<TestAsyncItem> stream1 = mediator.Stream(new TestAsyncUniversalRequest());
-        IAsyncEnumerable<TestAsyncItem> stream2 = mediator.Stream(new SpecifyAsyncValuesRequest() { RangeStart = 40, RangeCount = 3 });
+        IAsyncEnumerable<TestAsyncItem> stream1 = mediator.Stream(new TestStreamUniversalRequest());
+        IAsyncEnumerable<TestAsyncItem> stream2 = mediator.Stream(new SpecifyStreamValuesRequest() { RangeStart = 40, RangeCount = 3 });
 
         var list1 = new List<TestAsyncItem>();
         await foreach (TestAsyncItem item in stream1)
@@ -226,57 +225,75 @@ public class MediatorTest
         list2.ShouldNotBeEmpty();
         list2.Select(x => x.Value).ShouldBe([40m, 41m, 42m]);
 
-        cache.RequestInSequence.ShouldBe(new[] { typeof(TestAsyncUniversalRequest), typeof(SpecifyAsyncValuesRequest) });
-        cache.RequestOutSequence.ShouldBe(new[] { typeof(TestAsyncUniversalRequest), typeof(SpecifyAsyncValuesRequest) });
+        cache.RequestInSequence.ShouldBe(new[] { typeof(TestStreamUniversalRequest), typeof(SpecifyStreamValuesRequest) });
+        cache.RequestOutSequence.ShouldBe(new[] { typeof(TestStreamUniversalRequest), typeof(SpecifyStreamValuesRequest) });
     }
 
-    //[Fact]
-    //public async Task SendRequestWithGlobalExceptPipeline()
-    //{
-    //    IServiceProvider serviceProvider = BuildServiceProvider(cfg =>
-    //    {
-    //        cfg.ServiceCollection.AddSingleton<RequestSequenceCache>();
-    //        cfg.AddGlobalBehaviorExcept(typeof(RequestTrackingBehavior<,>), typeof(SpecifyValueRequest));
-    //    });
-    //    IMediator mediator = serviceProvider.GetRequiredService<IMediator>();
-    //    RequestSequenceCache cache = serviceProvider.GetRequiredService<RequestSequenceCache>();
+    [Fact]
+    public async Task StreamRequestWithGlobalExceptPipeline()
+    {
+        IServiceProvider serviceProvider = BuildServiceProvider(cfg =>
+        {
+            cfg.ServiceCollection.AddSingleton<RequestSequenceCache>();
+            cfg.AddGlobalBehaviorExcept(typeof(RequestStreamTrackingBehavior<,>), typeof(SpecifyStreamValuesRequest));
+        });
+        IMediator mediator = serviceProvider.GetRequiredService<IMediator>();
+        RequestSequenceCache cache = serviceProvider.GetRequiredService<RequestSequenceCache>();
 
-    //    TestResponse response1 = await mediator.Send(new TestUniversalRequest());
-    //    TestResponse response2 = await mediator.Send(new SpecifyValueRequest() { ValueToReturn = 3.14159m });
+        IAsyncEnumerable<TestAsyncItem> stream1 = mediator.Stream(new TestStreamUniversalRequest());
+        IAsyncEnumerable<TestAsyncItem> stream2 = mediator.Stream(new SpecifyStreamValuesRequest() { RangeStart = 40, RangeCount = 3 });
 
-    //    response1.Answer.ShouldBe(42m);
-    //    response2.Answer.ShouldBe(3.14159m);
-    //    cache.RequestInSequence.ShouldBe(new[] { typeof(TestUniversalRequest) });
-    //    cache.RequestOutSequence.ShouldBe(new[] { typeof(TestUniversalRequest) });
-    //}
+        var list1 = new List<TestAsyncItem>();
+        await foreach (TestAsyncItem item in stream1)
+            list1.Add(item);
+        var list2 = new List<TestAsyncItem>();
+        await foreach (TestAsyncItem item in stream2)
+            list2.Add(item);
 
-    //[Fact]
-    //public async Task SendRequestWithSpecificRequestPipeline()
-    //{
-    //    IServiceProvider serviceProvider = BuildServiceProvider(cfg =>
-    //    {
-    //        cfg.ServiceCollection.AddSingleton<RequestSequenceCache>();
-    //        cfg.AddBehaviorFor(typeof(RequestTrackingBehavior<,>), typeof(SpecifyValueRequest));
-    //    });
-    //    IMediator mediator = serviceProvider.GetRequiredService<IMediator>();
-    //    RequestSequenceCache cache = serviceProvider.GetRequiredService<RequestSequenceCache>();
+        list1.ShouldNotBeNull();
+        list1.ShouldNotBeEmpty();
+        list1.Select(x => x.Value).ShouldBe([41m, 42m, 43m]);
 
-    //    TestResponse response1 = await mediator.Send(new TestUniversalRequest());
-    //    TestResponse response2 = await mediator.Send(new SpecifyValueRequest() { ValueToReturn = 3.14159m });
+        list2.ShouldNotBeNull();
+        list2.ShouldNotBeEmpty();
+        list2.Select(x => x.Value).ShouldBe([40m, 41m, 42m]);
 
-    //    response1.Answer.ShouldBe(42m);
-    //    response2.Answer.ShouldBe(3.14159m);
-    //    cache.RequestInSequence.ShouldBe(new[] { typeof(SpecifyValueRequest) });
-    //    cache.RequestOutSequence.ShouldBe(new[] { typeof(SpecifyValueRequest) });
-    //}
+        cache.RequestInSequence.ShouldBe(new[] { typeof(TestStreamUniversalRequest) });
+        cache.RequestOutSequence.ShouldBe(new[] { typeof(TestStreamUniversalRequest) });
+    }
 
+    [Fact]
+    public async Task StreamRequestWithSpecificRequestPipeline()
+    {
+        IServiceProvider serviceProvider = BuildServiceProvider(cfg =>
+        {
+            cfg.ServiceCollection.AddSingleton<RequestSequenceCache>();
+            cfg.AddBehaviorFor(typeof(RequestStreamTrackingBehavior<,>), typeof(SpecifyStreamValuesRequest));
+        });
+        IMediator mediator = serviceProvider.GetRequiredService<IMediator>();
+        RequestSequenceCache cache = serviceProvider.GetRequiredService<RequestSequenceCache>();
 
+        IAsyncEnumerable<TestAsyncItem> stream1 = mediator.Stream(new TestStreamUniversalRequest());
+        IAsyncEnumerable<TestAsyncItem> stream2 = mediator.Stream(new SpecifyStreamValuesRequest() { RangeStart = 40, RangeCount = 3 });
 
+        var list1 = new List<TestAsyncItem>();
+        await foreach (TestAsyncItem item in stream1)
+            list1.Add(item);
+        var list2 = new List<TestAsyncItem>();
+        await foreach (TestAsyncItem item in stream2)
+            list2.Add(item);
 
+        list1.ShouldNotBeNull();
+        list1.ShouldNotBeEmpty();
+        list1.Select(x => x.Value).ShouldBe([41m, 42m, 43m]);
 
+        list2.ShouldNotBeNull();
+        list2.ShouldNotBeEmpty();
+        list2.Select(x => x.Value).ShouldBe([40m, 41m, 42m]);
 
-
-
+        cache.RequestInSequence.ShouldBe(new[] { typeof(SpecifyStreamValuesRequest) });
+        cache.RequestOutSequence.ShouldBe(new[] { typeof(SpecifyStreamValuesRequest) });
+    }
 
     public static IServiceProvider BuildServiceProvider(Action<PipelineBuilder>? configure = null)
     {
@@ -362,15 +379,19 @@ public class RequestTrackingBehavior<TRequest, TResponse>(RequestSequenceCache c
     }
 }
 
-public class RequestAsyncTrackingBehavior<TRequest, TItem>(RequestSequenceCache cache) : IAsyncPipelineBehavior<TRequest, TItem>
+public class RequestStreamTrackingBehavior<TRequest, TItem>(RequestSequenceCache cache) : IStreamPipelineBehavior<TRequest, TItem>
 {
-    public IAsyncEnumerable<TItem> Handle(TRequest request, Func<IAsyncEnumerable<TItem>> next, CancellationToken cancellationToken)
+    public async IAsyncEnumerable<TItem> Handle(TRequest request, Func<IAsyncEnumerable<TItem>> next, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         cache.AddInType(typeof(TRequest));
-        IAsyncEnumerable<TItem> response = next();
-        cache.AddOutType(typeof(TRequest));
 
-        return response;
+        // Await and yield items from the next delegate
+        await foreach (var item in next().WithCancellation(cancellationToken))
+        {
+            yield return item;
+        }
+
+        cache.AddOutType(typeof(TRequest));
     }
 }
 
@@ -379,13 +400,13 @@ public record TestAsyncItem
     public decimal Value { get; init; }
 }
 
-public record TestAsyncUniversalRequest : IAsyncRequest<TestAsyncItem>
+public record TestStreamUniversalRequest : IStreamRequest<TestAsyncItem>
 {
 }
 
-public class TestAsyncUniversalRequestHandler : IAsyncRequestHandler<TestAsyncUniversalRequest, TestAsyncItem>
+public class TestStreamUniversalRequestHandler : IStreamRequestHandler<TestStreamUniversalRequest, TestAsyncItem>
 {
-    public async IAsyncEnumerable<TestAsyncItem> Handle(TestAsyncUniversalRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<TestAsyncItem> Handle(TestStreamUniversalRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         IEnumerable<int> range = Enumerable.Range(41, 3);
         foreach (int i in range)
@@ -396,15 +417,15 @@ public class TestAsyncUniversalRequestHandler : IAsyncRequestHandler<TestAsyncUn
     }
 }
 
-public record SpecifyAsyncValuesRequest : IAsyncRequest<TestAsyncItem>
+public record SpecifyStreamValuesRequest : IStreamRequest<TestAsyncItem>
 {
     public int RangeStart { get; init; }
     public int RangeCount { get; init; }
 }
 
-public class SpecifyAsyncValuesHandler : IAsyncRequestHandler<SpecifyAsyncValuesRequest, TestAsyncItem>
+public class SpecifyStreamValuesHandler : IStreamRequestHandler<SpecifyStreamValuesRequest, TestAsyncItem>
 {
-    public async IAsyncEnumerable<TestAsyncItem> Handle(SpecifyAsyncValuesRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<TestAsyncItem> Handle(SpecifyStreamValuesRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         IEnumerable<int> range = Enumerable.Range(request.RangeStart, request.RangeCount);
         foreach (int i in range)
@@ -414,4 +435,3 @@ public class SpecifyAsyncValuesHandler : IAsyncRequestHandler<SpecifyAsyncValues
         }
     }
 }
-

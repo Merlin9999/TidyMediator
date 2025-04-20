@@ -98,7 +98,7 @@ namespace TidyMediator
         {
             return type.IsGenericTypeDefinition 
                 && type.GetGenericArguments().Length == 2 
-                && type.ImplementsOrInheritsFrom(typeof(IAsyncPipelineBehavior<,>));
+                && type.ImplementsOrInheritsFrom(typeof(IStreamPipelineBehavior<,>));
         }
     }
 

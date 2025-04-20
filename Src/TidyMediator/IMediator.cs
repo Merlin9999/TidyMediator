@@ -20,14 +20,12 @@ namespace TidyMediator
         Task Handle(TNotification notification, CancellationToken cancellationToken);
     }
 
-    public interface IAsyncRequest<TItem> { }
+    public interface IStreamRequest<TItem> { }
 
-    public interface IAsyncRequestHandler<in TRequest, out TItem> where TRequest : IAsyncRequest<TItem>
+    public interface IStreamRequestHandler<in TRequest, out TItem> where TRequest : IStreamRequest<TItem>
     {
-        IAsyncEnumerable<TItem> Handle(TRequest query, CancellationToken cancellationToken);
+        IAsyncEnumerable<TItem> Handle(TRequest request, CancellationToken cancellationToken);
     }
-
-
 
     public delegate Task<TResponse> RequestHandlerDelegate<TResponse>();
 
@@ -36,7 +34,7 @@ namespace TidyMediator
         Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken);
     }
 
-    public interface IAsyncPipelineBehavior<in TRequest, TItem>
+    public interface IStreamPipelineBehavior<in TRequest, TItem>
     {
         IAsyncEnumerable<TItem> Handle(TRequest request, Func<IAsyncEnumerable<TItem>> next, CancellationToken cancellationToken);
     }
@@ -50,6 +48,6 @@ namespace TidyMediator
     {
         Task<TResult> Send<TResult>(IRequest<TResult> request, CancellationToken cancellationToken = default);
         Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default) where TNotification : INotification;
-        IAsyncEnumerable<TItem> Stream<TItem>(IAsyncRequest<TItem> request, CancellationToken cancellationToken = default);
+        IAsyncEnumerable<TItem> Stream<TItem>(IStreamRequest<TItem> request, CancellationToken cancellationToken = default);
     }
 }

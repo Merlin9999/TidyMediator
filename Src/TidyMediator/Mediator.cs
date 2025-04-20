@@ -67,15 +67,15 @@ namespace TidyMediator
             await pipeline();
         }
 
-        public IAsyncEnumerable<TItem> Stream<TItem>(IAsyncRequest<TItem> request, CancellationToken cancellationToken = default)
+        public IAsyncEnumerable<TItem> Stream<TItem>(IStreamRequest<TItem> request, CancellationToken cancellationToken = default)
         {
             var requestType = request.GetType();
-            var handlerType = typeof(IAsyncRequestHandler<,>).MakeGenericType(requestType, typeof(TItem));
+            var handlerType = typeof(IStreamRequestHandler<,>).MakeGenericType(requestType, typeof(TItem));
             var handler = (dynamic)this._serviceProvider.GetRequiredService(handlerType);
 
-            var behaviorInfos = this._pipelineBuilder.ResolveForRequest(requestType, isAsync: true);
+            IEnumerable<(Type BehaviorType, Type RequestType)> behaviorInfos = this._pipelineBuilder.ResolveForRequest(requestType, isAsync: true);
 
-            var behaviors = behaviorInfos
+            List<dynamic> behaviors = behaviorInfos
                 .Select(info => this._serviceProvider.GetRequiredService(info.BehaviorType.MakeGenericType(requestType, typeof(TItem))))
                 .Cast<dynamic>()
                 .ToList();
@@ -84,8 +84,8 @@ namespace TidyMediator
 
             foreach (dynamic behavior in behaviors.AsEnumerable().Reverse())
             {
-                var current = pipeline;
-                pipeline = () => behavior.Handle(request, current, cancellationToken);
+                Func<IAsyncEnumerable<TItem>> current = pipeline;
+                pipeline = () => behavior.Handle((dynamic)request, current, cancellationToken);
             }
 
             return pipeline();
