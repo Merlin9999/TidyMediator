@@ -39,11 +39,6 @@ namespace TidyMediator
         IAsyncEnumerable<TItem> Handle(TRequest request, Func<IAsyncEnumerable<TItem>> next, CancellationToken cancellationToken);
     }
 
-    public struct Unit
-    {
-        public static readonly Unit Value = new Unit();
-    }
-
     public interface IMediator
     {
         Task<TResult> Send<TResult>(IRequest<TResult> request, CancellationToken cancellationToken = default);
