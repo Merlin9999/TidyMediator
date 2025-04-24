@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestPlatform.PlatformAbstractions.Interfaces;
 using Shouldly;
+using TidyMediator.FromTidyTime;
 
 namespace TidyMediator.Test;
 
@@ -164,6 +165,64 @@ public class MediatorTest
         notificationCounter.Count.ShouldBe(2);
         cache.RequestInSequence.ShouldBe(new[] { typeof(TestNotification) });
         cache.RequestOutSequence.ShouldBe(new[] { typeof(TestNotification) });
+    }
+
+    [Fact]
+    public async Task PublishNotificationToRegisteredDelegate()
+    {
+        int notificationCount = 0;
+
+        var serviceProvider = BuildServiceProvider(cfg =>
+        {
+            cfg.ServiceCollection.AddSingleton<NotificationCounter>();
+        });
+
+        var registry = new NotificationRegistry(serviceProvider)
+            .Subscribe<TestNotification>(notification => notificationCount++ );
+
+        IMediator mediator = serviceProvider.GetRequiredService<IMediator>();
+        await mediator.Publish(new TestNotification());
+        notificationCount.ShouldBe(1);
+
+        var dispatcher = serviceProvider.GetRequiredService<INotificationDispatcher<TestNotification>>();
+        dispatcher.RegisteredNotificationCount.ShouldBe(1);
+        registry.Dispose();
+        dispatcher.RegisteredNotificationCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task PublishNotificationToMultipleRegisteredDelegate()
+    {
+        int notificationCount = 0;
+
+        var serviceProvider = BuildServiceProvider(cfg =>
+        {
+            cfg.ServiceCollection.AddSingleton<NotificationCounter>();
+        });
+
+        var registry1 = new NotificationRegistry(serviceProvider)
+            .Subscribe<TestNotification>(notification => notificationCount++ )
+            .Subscribe<TestNotification2>(notification => notificationCount++ )
+            .Subscribe<TestNotification2>(notification => notificationCount++ );
+
+        var registry2 = new NotificationRegistry(serviceProvider)
+            .Subscribe<TestNotification2>(notification => notificationCount++ );
+
+        IMediator mediator = serviceProvider.GetRequiredService<IMediator>();
+        await mediator.Publish(new TestNotification());
+        notificationCount.ShouldBe(1);
+        await mediator.Publish(new TestNotification2());
+        notificationCount.ShouldBe(4);
+
+        var dispatcher1 = serviceProvider.GetRequiredService<INotificationDispatcher<TestNotification>>();
+        var dispatcher2 = serviceProvider.GetRequiredService<INotificationDispatcher<TestNotification2>>();
+
+        dispatcher1.RegisteredNotificationCount.ShouldBe(1);
+        dispatcher2.RegisteredNotificationCount.ShouldBe(3);
+        registry1.Dispose();
+        registry2.Dispose();
+        dispatcher1.RegisteredNotificationCount.ShouldBe(0);
+        dispatcher2.RegisteredNotificationCount.ShouldBe(0);
     }
 
     [Fact]
@@ -340,6 +399,8 @@ public record NotificationCounter
 }
 
 public class TestNotification : INotification { }
+
+public class TestNotification2 : INotification { }
 
 public class Test1NotificationHandler(NotificationCounter notificationCounter) : INotificationHandler<TestNotification>
 {

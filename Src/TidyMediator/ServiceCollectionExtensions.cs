@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using TidyMediator;
+using TidyMediator.FromTidyTime;
 
 namespace TidyMediator
 {
@@ -24,59 +25,13 @@ namespace TidyMediator
             services.AddSingleton(builder);
 
             services.RegisterDerivedTypesAsTransient(typeof(IRequestHandler<,>));
-            services.RegisterDerivedTypesAsTransient(typeof(INotificationHandler<>));
             services.RegisterDerivedTypesAsTransient(typeof(IStreamRequestHandler<,>));
+            services.RegisterDerivedTypesAsTransient(typeof(INotificationHandler<>));
+
+            services.AddSingleton(typeof(INotificationDispatcher<>), typeof(NotificationDispatcher<>));
+
 
             return services;
-        }
-
-        public static IServiceCollection RegisterDerivedTypesAsTransient(this IServiceCollection services, Type baseType, 
-            Action<IServiceCollection, (Type Derived, Type Base)> registrationAction = null)
-        {
-            IEnumerable<(Type Derived, Type Base)> derivedTypes = GetTypesThatImplementOrInheritFrom(baseType);
-
-            foreach ((Type Derived, Type Base) typeInfo in derivedTypes)
-            {
-                services.AddTransient(typeInfo.Base, typeInfo.Derived);
-                registrationAction?.Invoke(services, typeInfo);
-            }
-
-            return services;
-        }
-
-        private static IEnumerable<(Type Derived, Type Base)> GetTypesThatImplementOrInheritFrom(Type baseType)
-        {
-            Assembly[] loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
-
-            return loadedAssemblies
-                .SelectMany(a => a.GetTypes())
-                .Where(t => !t.IsAbstract && !t.IsInterface)
-                .Where(t => t.ImplementsOrInheritsFrom(baseType))
-                .SelectMany(t => GetClosedBaseType(t, baseType),
-                    (derivedType, closedBaseType) => (Derived: derivedType, Base: closedBaseType));
-        }
-
-        private static IEnumerable<Type> GetClosedBaseType(Type derivedType, Type baseType)
-        {
-            if (!derivedType.ImplementsOrInheritsFrom(baseType))
-                return Enumerable.Empty<Type>();
-
-            if (!baseType.IsGenericType || !baseType.IsGenericTypeDefinition)
-                return Enumerable.Empty<Type>().Append(baseType);
-
-            if (baseType.IsInterface)
-                return derivedType.GetInterfaces().Where(i => i.GetGenericTypeDefinition() == baseType);
-
-            Type type = derivedType.BaseType;
-            while (type != null && type != typeof(object))
-            {
-                if (type.GetGenericTypeDefinition() == baseType)
-                    return Enumerable.Empty<Type>().Append(type);
-
-                type = type.BaseType;
-            }
-
-            return null;
         }
 
         /// <summary>
@@ -120,6 +75,58 @@ namespace TidyMediator
             }
 
             return false;
+        }
+
+        private static IServiceCollection RegisterDerivedTypesAsTransient(this IServiceCollection services, Type baseType, 
+            Action<IServiceCollection, (Type Derived, Type Base)> registrationAction = null)
+        {
+            IEnumerable<(Type Derived, Type Base)> derivedTypes = GetTypesThatImplementOrInheritFrom(baseType);
+
+            foreach ((Type Derived, Type Base) typeInfo in derivedTypes)
+            {
+                services.AddTransient(typeInfo.Base, typeInfo.Derived);
+                registrationAction?.Invoke(services, typeInfo);
+            }
+
+            return services;
+        }
+
+        private static IEnumerable<(Type Derived, Type Base)> GetTypesThatImplementOrInheritFrom(Type baseType)
+        {
+            Assembly[] loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
+
+            return loadedAssemblies
+                .SelectMany(a => a.GetTypes())
+                .Where(t => !t.IsAbstract && !t.IsInterface)
+                .Where(t => t.ImplementsOrInheritsFrom(baseType))
+                .SelectMany(t => GetClosedBaseType(t, baseType),
+                    (derivedType, closedBaseType) => (Derived: derivedType, Base: closedBaseType));
+        }
+
+        private static IEnumerable<Type> GetClosedBaseType(Type derivedType, Type baseType)
+        {
+            if (!derivedType.ImplementsOrInheritsFrom(baseType))
+                return Enumerable.Empty<Type>();
+
+            if (!baseType.IsGenericType || !baseType.IsGenericTypeDefinition)
+                return Enumerable.Empty<Type>().Append(baseType);
+
+            if (derivedType.IsGenericTypeDefinition)
+                return Enumerable.Empty<Type>().Append(baseType);
+
+            if (baseType.IsInterface)
+                return derivedType.GetInterfaces().Where(i => i.GetGenericTypeDefinition() == baseType);
+
+            Type type = derivedType.BaseType;
+            while (type != null && type != typeof(object))
+            {
+                if (type.GetGenericTypeDefinition() == baseType)
+                    return Enumerable.Empty<Type>().Append(type);
+
+                type = type.BaseType;
+            }
+
+            return Enumerable.Empty<Type>();
         }
     }
 }
