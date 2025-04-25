@@ -29,7 +29,7 @@ namespace TidyMediator
             services.RegisterDerivedTypesAsTransient(typeof(INotificationHandler<>));
 
             services.AddSingleton(typeof(INotificationDispatcher<>), typeof(NotificationDispatcher<>));
-
+            services.AddSingleton(typeof(ISyncContextNotificationDispatcher<>), typeof(SyncContextNotificationDispatcher<>));
 
             return services;
         }
