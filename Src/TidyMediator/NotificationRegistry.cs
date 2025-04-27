@@ -1,42 +1,31 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using TidyMediator.Extensions;
+using TidyMediator.Internal;
 
-namespace TidyMediator.FromTidyTime
+namespace TidyMediator
 {
-    public class SyncContextNotificationRegistry : AbstractNotificationRegistry<SyncContextNotificationRegistry>
+    public class NotificationRegistry : AbstractNotificationRegistry<NotificationRegistry>
     {
-        public static void CaptureUISynchronizationContext()
-        {
-            SyncContextNotificationSink.CaptureUISynchronizationContext();
-        }
-
-        public SyncContextNotificationRegistry(IServiceProvider sp)
+        public NotificationRegistry(IServiceProvider sp)
             : base(sp)
         {
         }
 
         protected override void SubscribeToDispatcher<TNotification>(NotificationRegistration<TNotification> registration)
         {
-            registration.SyncContext = SynchronizationContext.Current;
             INotificationDispatcherBase<TNotification> dispatcher = this.GetNotificationDispatcher<TNotification>();
             dispatcher.Subscribe(registration);
         }
 
         protected override void SubscribeToAsyncDispatcher<TNotification>(AsyncNotificationRegistration<TNotification> asyncRegistration)
         {
-            asyncRegistration.SyncContext = SynchronizationContext.Current;
             INotificationDispatcherBase<TNotification> dispatcher = this.GetNotificationDispatcher<TNotification>();
             dispatcher.Subscribe(asyncRegistration);
         }
 
         protected override INotificationDispatcherBase<TNotification> GetNotificationDispatcher<TNotification>()
         {
-            return this.Sp.GetRequiredService<ISyncContextNotificationDispatcher<TNotification>>();
+            return this.Sp.GetRequiredService<INotificationDispatcher<TNotification>>();
         }
     }
 }

@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TidyMediator.FromTidyTime
+namespace TidyMediator.Internal
 {
     public interface INotificationDispatcherBase<TNotification> 
         where TNotification : INotification

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using TidyMediator;
-using TidyMediator.FromTidyTime;
+using TidyMediator.Internal;
 
 namespace TidyMediator
 {

@@ -1,8 +1,7 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 
-namespace TidyMediator.FromTidyTime
+namespace TidyMediator.Internal
 {
     public sealed class NotificationDispatcher<TNotification> : AbstractNotificationDispatcher<TNotification>, INotificationDispatcher<TNotification>
         where TNotification : INotification

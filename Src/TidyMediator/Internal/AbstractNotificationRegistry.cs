@@ -4,10 +4,9 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 using TidyMediator.Extensions;
 
-namespace TidyMediator.FromTidyTime
+namespace TidyMediator.Internal
 {
     public abstract class AbstractNotificationRegistry<TRegistry> : IDisposable
         where TRegistry : AbstractNotificationRegistry<TRegistry>

@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Immutable;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TidyMediator.Extensions;
 
-namespace TidyMediator.FromTidyTime
+namespace TidyMediator.Internal
 {
     public static class SyncContextNotificationSink
     {

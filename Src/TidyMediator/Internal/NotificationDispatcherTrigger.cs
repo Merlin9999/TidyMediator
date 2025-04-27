@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-namespace TidyMediator.FromTidyTime
+namespace TidyMediator.Internal
 {
     public class NotificationDispatcherTrigger<TNotification> : INotificationHandler<TNotification>
         where TNotification : INotification

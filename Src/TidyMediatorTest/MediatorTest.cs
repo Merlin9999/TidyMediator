@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestPlatform.PlatformAbstractions.Interfaces;
 using Nito.AsyncEx;
 using Shouldly;
-using TidyMediator.FromTidyTime;
+using TidyMediator.Internal;
 
 namespace TidyMediator.Test;
 
