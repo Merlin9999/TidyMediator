@@ -9,34 +9,7 @@ using TidyMediator.Extensions;
 
 namespace TidyMediator.Internal
 {
-    public abstract class AbstractNotificationRegistry
-    {
-        //private static ImmutableDictionary<(Type, Type), Action> _unsubscribeCache = ImmutableDictionary<(Type, Type), Action>.Empty;
-
-        //protected virtual void UnsubscribeImpl(Type notificationType)
-        //{
-        //    (Type derivedType, Type notificationType) key = (this.GetType(), notificationType);
-
-        //    if (!_unsubscribeCache.TryGetValue(key, out var action))
-        //    {
-        //        var expression = Expression.Call(
-        //            Expression.Constant(this),
-        //            "UnsubscribeImpl",
-        //            new[] { notificationType },
-        //            null
-        //        );
-
-        //        var lambda = Expression.Lambda<Action>(expression);
-        //        action = lambda.Compile();
-
-        //        ImmutableInterlocked.Update(ref _unsubscribeCache, d => d.SetItem(key, action));
-        //    }
-
-        //    action();
-        //}
-    }
-
-    public abstract class AbstractNotificationRegistry<TRegistry> : AbstractNotificationRegistry, IDisposable
+    public abstract class AbstractNotificationRegistry<TRegistry> : IDisposable
         where TRegistry : AbstractNotificationRegistry<TRegistry>
     {
         private readonly object _lockObject = new object();
