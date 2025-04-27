@@ -12,14 +12,19 @@ namespace TidyMediator.FromTidyTime
 
         protected override void SubscribeToDispatcher<TNotification>(NotificationRegistration<TNotification> registration)
         {
-            var dispatcher = this.Sp.GetRequiredService<INotificationDispatcher<TNotification>>();
+            INotificationDispatcherBase<TNotification> dispatcher = this.GetNotificationDispatcher<TNotification>();
             dispatcher.Subscribe(registration);
         }
 
         protected override void SubscribeToAsyncDispatcher<TNotification>(AsyncNotificationRegistration<TNotification> asyncRegistration)
         {
-            var sink = this.Sp.GetRequiredService<INotificationDispatcher<TNotification>>();
-            sink.Subscribe(asyncRegistration);
+            INotificationDispatcherBase<TNotification> dispatcher = this.GetNotificationDispatcher<TNotification>();
+            dispatcher.Subscribe(asyncRegistration);
+        }
+
+        protected override INotificationDispatcherBase<TNotification> GetNotificationDispatcher<TNotification>()
+        {
+            return this.Sp.GetRequiredService<INotificationDispatcher<TNotification>>();
         }
     }
 }

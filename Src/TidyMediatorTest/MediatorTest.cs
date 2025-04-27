@@ -4,6 +4,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestPlatform.PlatformAbstractions.Interfaces;
+using Nito.AsyncEx;
 using Shouldly;
 using TidyMediator.FromTidyTime;
 
@@ -185,9 +186,9 @@ public class MediatorTest
         notificationCount.ShouldBe(1);
 
         var dispatcher = serviceProvider.GetRequiredService<INotificationDispatcher<TestNotification>>();
-        dispatcher.RegisteredNotificationCount.ShouldBe(1);
+        dispatcher.RegisteredDelegateCount.ShouldBe(1);
         registry.Dispose();
-        dispatcher.RegisteredNotificationCount.ShouldBe(0);
+        dispatcher.RegisteredDelegateCount.ShouldBe(0);
     }
 
     [Fact]
@@ -201,12 +202,16 @@ public class MediatorTest
         });
 
         var registry1 = new NotificationRegistry(serviceProvider)
-            .Subscribe<TestNotification>(notification => notificationCount++ )
-            .Subscribe<TestNotification2>(notification => notificationCount++ )
-            .Subscribe<TestNotification2>(notification => notificationCount++ );
+            .Subscribe<TestNotification>(notification => notificationCount++)
+            .Subscribe<TestNotification2>(notification => notificationCount++)
+            .Subscribe<TestNotification2>(notification =>
+            {
+                notificationCount++;
+                return Task.CompletedTask;
+            });
 
         var registry2 = new NotificationRegistry(serviceProvider)
-            .Subscribe<TestNotification2>(notification => notificationCount++ );
+            .Subscribe<TestNotification2>(notification => notificationCount++);
 
         IMediator mediator = serviceProvider.GetRequiredService<IMediator>();
         await mediator.Publish(new TestNotification());
@@ -217,12 +222,126 @@ public class MediatorTest
         var dispatcher1 = serviceProvider.GetRequiredService<INotificationDispatcher<TestNotification>>();
         var dispatcher2 = serviceProvider.GetRequiredService<INotificationDispatcher<TestNotification2>>();
 
-        dispatcher1.RegisteredNotificationCount.ShouldBe(1);
-        dispatcher2.RegisteredNotificationCount.ShouldBe(3);
+        dispatcher1.RegisteredDelegateCount.ShouldBe(1);
+        dispatcher2.RegisteredDelegateCount.ShouldBe(3);
         registry1.Dispose();
         registry2.Dispose();
-        dispatcher1.RegisteredNotificationCount.ShouldBe(0);
-        dispatcher2.RegisteredNotificationCount.ShouldBe(0);
+        dispatcher1.RegisteredDelegateCount.ShouldBe(0);
+        dispatcher2.RegisteredDelegateCount.ShouldBe(0);
+    }
+    
+    [Fact]
+    public async Task PublishNotificationToRegisteredSyncContextSyncDelegate()
+    {
+        int notificationCount = 0;
+
+        var serviceProvider = BuildServiceProvider(cfg =>
+        {
+            cfg.ServiceCollection.AddSingleton<NotificationCounter>();
+        });
+
+        var registry = await RegisterAndPublishNotificationWithSyncContextAsync(serviceProvider, new TestNotification(),
+            null,
+            n => notificationCount++);
+
+        notificationCount.ShouldBe(1);
+
+        var dispatcher = serviceProvider.GetRequiredService<ISyncContextNotificationDispatcher<TestNotification>>();
+        dispatcher.RegisteredDelegateCount.ShouldBe(1);
+        registry.ShouldNotBeNull();
+        registry.Dispose();
+        dispatcher.RegisteredDelegateCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task PublishNotificationToRegisteredSyncContextAsyncDelegate()
+    {
+        int notificationCount = 0;
+
+        var serviceProvider = BuildServiceProvider(cfg =>
+        {
+            cfg.ServiceCollection.AddSingleton<NotificationCounter>();
+        });
+
+        var registry = await RegisterAndPublishNotificationWithSyncContextAsync(serviceProvider, new TestNotification(),
+            n =>
+            {
+                notificationCount++;
+                return Task.CompletedTask;
+            });
+
+        notificationCount.ShouldBe(1);
+
+        var dispatcher = serviceProvider.GetRequiredService<ISyncContextNotificationDispatcher<TestNotification>>();
+        dispatcher.RegisteredDelegateCount.ShouldBe(1);
+        registry.ShouldNotBeNull();
+        registry.Dispose();
+        dispatcher.RegisteredDelegateCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task PublishNotificationToMultipleRegisteredSyncContextDelegate()
+    {
+        int notificationCount = 0;
+
+        var serviceProvider = BuildServiceProvider(cfg =>
+        {
+            cfg.ServiceCollection.AddSingleton<NotificationCounter>();
+        });
+
+        var registry = await RegisterAndPublishNotificationWithSyncContextAsync(serviceProvider, new TestNotification(),
+            n =>
+            {
+                notificationCount++;
+                return Task.CompletedTask;
+            },
+            n => notificationCount++,
+            n => notificationCount++);
+
+        notificationCount.ShouldBe(3);
+
+        var dispatcher = serviceProvider.GetRequiredService<ISyncContextNotificationDispatcher<TestNotification>>();
+        dispatcher.RegisteredDelegateCount.ShouldBe(3);
+        registry.ShouldNotBeNull();
+        registry.Dispose();
+        dispatcher.RegisteredDelegateCount.ShouldBe(0);
+    }
+
+    private static async Task<SyncContextNotificationRegistry?> RegisterAndPublishNotificationWithSyncContextAsync<TNotification>(
+        IServiceProvider serviceProvider,
+        TNotification notification, 
+        Func<TNotification, Task>? asyncDelegateToRegister,
+        params Action<TNotification>[] delegatesToRegister) 
+        where TNotification : INotification
+    {
+        SyncContextNotificationRegistry? registry = null;
+
+        var contextThread = new AsyncContextThread();
+        try
+        {
+            await contextThread.Factory.StartNew(() =>
+            {
+                // Subscribe to a notification using the current synchronization context
+                registry = new SyncContextNotificationRegistry(serviceProvider);
+                if (asyncDelegateToRegister != null)
+                    registry.Subscribe<TNotification>(asyncDelegateToRegister);
+
+                foreach (Action<TNotification> delegateToRegister in delegatesToRegister)
+                    registry.Subscribe<TNotification>(delegateToRegister);
+            });
+
+            IMediator mediator = serviceProvider.GetRequiredService<IMediator>();
+
+            // Signal the notification while the async context thread is running so the delegate can be scheduled on that thread.
+            await mediator.Publish(notification);
+        }
+        finally
+        {
+            // End the AsyncContextThread by joining that thread with this one.
+            await contextThread.JoinAsync();
+        }
+
+        return registry;
     }
 
     [Fact]

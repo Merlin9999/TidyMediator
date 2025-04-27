@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace TidyMediator.FromTidyTime
@@ -19,17 +20,18 @@ namespace TidyMediator.FromTidyTime
         /// <summary>
         /// Gets the number of registered notification handlers. Use for unit tests.
         /// </summary>
-        int RegisteredNotificationCount { get; }
-
+        int RegisteredDelegateCount { get; }
     }
 
     public class NotificationRegistration<TNotification> where TNotification : INotification
     {
-        public Action<TNotification> Notification { get; set; }
+        public Action<TNotification> Handler { get; set; }
+        public SynchronizationContext SyncContext { get; set; } = null;
     }
 
     public class AsyncNotificationRegistration<TNotification> where TNotification : INotification
     {
-        public Func<TNotification, Task> Notification { get; set; }
+        public Func<TNotification, Task> Handler { get; set; }
+        public SynchronizationContext SyncContext { get; set; } = null;
     }
 }

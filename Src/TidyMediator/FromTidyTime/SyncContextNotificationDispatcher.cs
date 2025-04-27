@@ -21,20 +21,17 @@ namespace TidyMediator.FromTidyTime
         ISyncContextNotificationDispatcher<TNotification> 
         where TNotification : INotification
     {
-
         public async Task CallHandlers(TNotification notification)
         {
-            NotificationHandlers handlers = this.GetNotificationHandlers();
+            NotificationRegistrations registrations = this.GetNotificationRegistrations();
 
-            SynchronizationContext syncContext = SyncContextNotificationSink.SyncContext;
-            if (syncContext == null)
-                return;
+            SynchronizationContext defaultSyncContext = SyncContextNotificationSink.SyncContext;
 
-            foreach (Action<TNotification> handler in handlers.Notifications)
-                syncContext.Send(_ => handler(notification), null);
+            foreach (NotificationRegistration<TNotification> registration in registrations.Registrations)
+                (registration.SyncContext ?? defaultSyncContext)?.Send(_ => registration.Handler(notification), null);
 
-            await Task.WhenAll(handlers.AsyncNotifications.Select(func =>
-                syncContext.SendAsync(_ => func(notification), null)));
+            await Task.WhenAll(registrations.AsyncRegistrations.Select(registration =>
+                (registration.SyncContext ?? defaultSyncContext)?.SendAsync(_ => registration.Handler(notification), null)));
         }
     }
 }

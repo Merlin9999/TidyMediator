@@ -9,7 +9,7 @@ namespace TidyMediator.FromTidyTime
     public abstract class AbstractNotificationDispatcher<TNotification>
         where TNotification : INotification
     {
-        protected readonly object LockObject = new object();
+        private readonly object _lockObject = new object();
 
         private volatile ImmutableList<WeakReference<NotificationRegistration<TNotification>>> 
             _registrations = ImmutableList<WeakReference<NotificationRegistration<TNotification>>>.Empty;
@@ -19,7 +19,7 @@ namespace TidyMediator.FromTidyTime
 
         public void Subscribe(NotificationRegistration<TNotification> registration)
         {
-            lock (this.LockObject)
+            lock (this._lockObject)
             {
                 this._registrations =
                     this._registrations.Add(new WeakReference<NotificationRegistration<TNotification>>(registration));
@@ -28,7 +28,7 @@ namespace TidyMediator.FromTidyTime
 
         public void Unsubscribe(NotificationRegistration<TNotification> registration)
         {
-            lock (this.LockObject)
+            lock (this._lockObject)
             {
                 WeakReference<NotificationRegistration<TNotification>> referenceToRemove = this._registrations
                     .SingleOrDefault(x => WeakReferenceExtensions.TryGetTarget<NotificationRegistration<TNotification>>(x) == registration);
@@ -40,7 +40,7 @@ namespace TidyMediator.FromTidyTime
 
         public void Subscribe(AsyncNotificationRegistration<TNotification> registration)
         {
-            lock (this.LockObject)
+            lock (this._lockObject)
             {
                 this._asyncRegistrations =
                     this._asyncRegistrations.Add(
@@ -50,7 +50,7 @@ namespace TidyMediator.FromTidyTime
 
         public void Unsubscribe(AsyncNotificationRegistration<TNotification> registration)
         {
-            lock (this.LockObject)
+            lock (this._lockObject)
             {
                 WeakReference<AsyncNotificationRegistration<TNotification>> referenceToRemove = this._asyncRegistrations
                     .SingleOrDefault(x => x.TryGetTarget() == registration);
@@ -63,18 +63,18 @@ namespace TidyMediator.FromTidyTime
         /// <summary>
         /// Gets the number of registered notification handlers. Use for unit tests.
         /// </summary>
-        public int RegisteredNotificationCount
+        public int RegisteredDelegateCount
         {
             get
             {
-                NotificationHandlers handlers = this.GetNotificationHandlers();
-                return handlers.Notifications.Count + handlers.AsyncNotifications.Count;
+                NotificationRegistrations registrations = this.GetNotificationRegistrations();
+                return registrations.Registrations.Count + registrations.AsyncRegistrations.Count;
             }
         }
 
-        protected NotificationHandlers GetNotificationHandlers()
+        protected NotificationRegistrations GetNotificationRegistrations()
         {
-            lock (this.LockObject)
+            lock (this._lockObject)
             {
                 var registrations = this._registrations
                     .Select(x => new { Reference = x, Target = x.TryGetTarget() })
@@ -98,24 +98,24 @@ namespace TidyMediator.FromTidyTime
 
                 this._asyncRegistrations = this._asyncRegistrations.RemoveRange(asyncRegistrationsToRemove);
 
-                return new NotificationHandlers
+                return new NotificationRegistrations
                 {
-                    Notifications = registrations
+                    Registrations = registrations
                         .Where(x => x.Target != null)
-                        .Select(x => x.Target.Notification)
+                        .Select(x => x.Target)
                         .ToImmutableList(),
-                    AsyncNotifications = asyncRegistrations
+                    AsyncRegistrations = asyncRegistrations
                         .Where(x => x.Target != null)
-                        .Select(x => x.Target.Notification)
+                        .Select(x => x.Target)
                         .ToImmutableList(),
                 };
             }
         }
 
-        protected class NotificationHandlers
+        protected class NotificationRegistrations
         {
-            public ImmutableList<Action<TNotification>> Notifications { get; set; }
-            public ImmutableList<Func<TNotification, Task>> AsyncNotifications { get; set; }
+            public ImmutableList<NotificationRegistration<TNotification>> Registrations { get; set; }
+            public ImmutableList<AsyncNotificationRegistration<TNotification>> AsyncRegistrations { get; set; }
         }
     }
 }

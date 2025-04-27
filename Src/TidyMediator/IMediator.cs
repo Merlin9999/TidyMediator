@@ -45,4 +45,9 @@ namespace TidyMediator
         Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default) where TNotification : INotification;
         IAsyncEnumerable<TItem> Stream<TItem>(IStreamRequest<TItem> request, CancellationToken cancellationToken = default);
     }
+    
+    public struct Unit
+    {
+        public static readonly Unit Value = new Unit();
+    }
 }
