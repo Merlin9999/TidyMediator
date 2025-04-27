@@ -179,7 +179,7 @@ public class MediatorTest
         });
 
         var registry = new NotificationRegistry(serviceProvider)
-            .Subscribe<TestNotification>(notification => notificationCount++ );
+            .Subscribe<TestNotification>(notification => notificationCount++);
 
         IMediator mediator = serviceProvider.GetRequiredService<IMediator>();
         await mediator.Publish(new TestNotification());
