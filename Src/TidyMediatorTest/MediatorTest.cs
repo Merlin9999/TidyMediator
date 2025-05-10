@@ -25,7 +25,7 @@ public class MediatorTest
     public async Task SendRequest()
     {
         IMediator mediator = BuildServiceProvider().GetRequiredService<IMediator>();
-        TestResponse response = await mediator.Send(new TestUniversalRequest());
+        TestResponse response = await mediator.SendAsync(new TestUniversalRequest());
 
         response.ShouldNotBeNull();
         response.Answer.ShouldBe(42);
@@ -35,7 +35,7 @@ public class MediatorTest
     public async Task SendRequestWithSharedResponseType()
     {
         IMediator mediator = BuildServiceProvider().GetRequiredService<IMediator>();
-        TestResponse response = await mediator.Send(new SpecifyValueRequest() { ValueToReturn = 3.14159m });
+        TestResponse response = await mediator.SendAsync(new SpecifyValueRequest() { ValueToReturn = 3.14159m });
 
         response.ShouldNotBeNull();
         response.Answer.ShouldBe(3.14159m);
@@ -52,8 +52,8 @@ public class MediatorTest
         IMediator mediator = serviceProvider.GetRequiredService<IMediator>();
         RequestSequenceCache cache = serviceProvider.GetRequiredService<RequestSequenceCache>();
 
-        TestResponse response1 = await mediator.Send(new TestUniversalRequest());
-        TestResponse response2 = await mediator.Send(new SpecifyValueRequest() { ValueToReturn = 3.14159m });
+        TestResponse response1 = await mediator.SendAsync(new TestUniversalRequest());
+        TestResponse response2 = await mediator.SendAsync(new SpecifyValueRequest() { ValueToReturn = 3.14159m });
 
         response1.Answer.ShouldBe(42m);
         response2.Answer.ShouldBe(3.14159m);
@@ -72,8 +72,8 @@ public class MediatorTest
         IMediator mediator = serviceProvider.GetRequiredService<IMediator>();
         RequestSequenceCache cache = serviceProvider.GetRequiredService<RequestSequenceCache>();
 
-        TestResponse response1 = await mediator.Send(new TestUniversalRequest());
-        TestResponse response2 = await mediator.Send(new SpecifyValueRequest() { ValueToReturn = 3.14159m });
+        TestResponse response1 = await mediator.SendAsync(new TestUniversalRequest());
+        TestResponse response2 = await mediator.SendAsync(new SpecifyValueRequest() { ValueToReturn = 3.14159m });
 
         response1.Answer.ShouldBe(42m);
         response2.Answer.ShouldBe(3.14159m);
@@ -92,8 +92,8 @@ public class MediatorTest
         IMediator mediator = serviceProvider.GetRequiredService<IMediator>();
         RequestSequenceCache cache = serviceProvider.GetRequiredService<RequestSequenceCache>();
 
-        TestResponse response1 = await mediator.Send(new TestUniversalRequest());
-        TestResponse response2 = await mediator.Send(new SpecifyValueRequest() { ValueToReturn = 3.14159m });
+        TestResponse response1 = await mediator.SendAsync(new TestUniversalRequest());
+        TestResponse response2 = await mediator.SendAsync(new SpecifyValueRequest() { ValueToReturn = 3.14159m });
 
         response1.Answer.ShouldBe(42m);
         response2.Answer.ShouldBe(3.14159m);
@@ -110,7 +110,7 @@ public class MediatorTest
         });
         IMediator mediator = serviceProvider.GetRequiredService<IMediator>();
         NotificationCounter notificationCounter = serviceProvider.GetRequiredService<NotificationCounter>();
-        await mediator.Publish(new TestNotification());
+        await mediator.PublishAsync(new TestNotification());
         notificationCounter.Count.ShouldBe(2);
     }
 
@@ -126,7 +126,7 @@ public class MediatorTest
         IMediator mediator = serviceProvider.GetRequiredService<IMediator>();
         NotificationCounter notificationCounter = serviceProvider.GetRequiredService<NotificationCounter>();
         RequestSequenceCache cache = serviceProvider.GetRequiredService<RequestSequenceCache>();
-        await mediator.Publish(new TestNotification());
+        await mediator.PublishAsync(new TestNotification());
         notificationCounter.Count.ShouldBe(2);
         cache.RequestInSequence.ShouldBe(new[] { typeof(TestNotification) });
         cache.RequestOutSequence.ShouldBe(new[] { typeof(TestNotification) });
@@ -144,7 +144,7 @@ public class MediatorTest
         IMediator mediator = serviceProvider.GetRequiredService<IMediator>();
         NotificationCounter notificationCounter = serviceProvider.GetRequiredService<NotificationCounter>();
         RequestSequenceCache cache = serviceProvider.GetRequiredService<RequestSequenceCache>();
-        await mediator.Publish(new TestNotification());
+        await mediator.PublishAsync(new TestNotification());
         notificationCounter.Count.ShouldBe(2);
         cache.RequestInSequence.ShouldBeEmpty();
         cache.RequestOutSequence.ShouldBeEmpty();
@@ -162,7 +162,7 @@ public class MediatorTest
         IMediator mediator = serviceProvider.GetRequiredService<IMediator>();
         NotificationCounter notificationCounter = serviceProvider.GetRequiredService<NotificationCounter>();
         RequestSequenceCache cache = serviceProvider.GetRequiredService<RequestSequenceCache>();
-        await mediator.Publish(new TestNotification());
+        await mediator.PublishAsync(new TestNotification());
         notificationCounter.Count.ShouldBe(2);
         cache.RequestInSequence.ShouldBe(new[] { typeof(TestNotification) });
         cache.RequestOutSequence.ShouldBe(new[] { typeof(TestNotification) });
@@ -182,7 +182,7 @@ public class MediatorTest
             .Subscribe<TestNotification>(notification => notificationCount++);
 
         IMediator mediator = serviceProvider.GetRequiredService<IMediator>();
-        await mediator.Publish(new TestNotification());
+        await mediator.PublishAsync(new TestNotification());
         notificationCount.ShouldBe(1);
 
         var dispatcher = serviceProvider.GetRequiredService<INotificationDispatcher<TestNotification>>();
@@ -214,9 +214,9 @@ public class MediatorTest
             .Subscribe<TestNotification2>(notification => notificationCount++);
 
         IMediator mediator = serviceProvider.GetRequiredService<IMediator>();
-        await mediator.Publish(new TestNotification());
+        await mediator.PublishAsync(new TestNotification());
         notificationCount.ShouldBe(1);
-        await mediator.Publish(new TestNotification2());
+        await mediator.PublishAsync(new TestNotification2());
         notificationCount.ShouldBe(4);
 
         var dispatcher1 = serviceProvider.GetRequiredService<INotificationDispatcher<TestNotification>>();
@@ -333,7 +333,7 @@ public class MediatorTest
             IMediator mediator = serviceProvider.GetRequiredService<IMediator>();
 
             // Signal the notification while the async context thread is running so the delegate can be scheduled on that thread.
-            await mediator.Publish(notification);
+            await mediator.PublishAsync(notification);
         }
         finally
         {
@@ -348,7 +348,7 @@ public class MediatorTest
     public async Task StreamRequest()
     {
         IMediator mediator = BuildServiceProvider().GetRequiredService<IMediator>();
-        IAsyncEnumerable<TestAsyncItem> stream = mediator.Stream(new TestStreamUniversalRequest());
+        IAsyncEnumerable<TestAsyncItem> stream = mediator.StreamAsync(new TestStreamUniversalRequest());
 
         var list = new List<TestAsyncItem>();
         await foreach (TestAsyncItem item in stream)
@@ -363,7 +363,7 @@ public class MediatorTest
     public async Task StreamRequestWithSharedResponseType()
     {
         IMediator mediator = BuildServiceProvider().GetRequiredService<IMediator>();
-        IAsyncEnumerable<TestAsyncItem> stream = mediator.Stream(new SpecifyStreamValuesRequest() { RangeStart = 40, RangeCount = 3 });
+        IAsyncEnumerable<TestAsyncItem> stream = mediator.StreamAsync(new SpecifyStreamValuesRequest() { RangeStart = 40, RangeCount = 3 });
 
         var list = new List<TestAsyncItem>();
         await foreach (TestAsyncItem item in stream)
@@ -385,8 +385,8 @@ public class MediatorTest
         IMediator mediator = serviceProvider.GetRequiredService<IMediator>();
         RequestSequenceCache cache = serviceProvider.GetRequiredService<RequestSequenceCache>();
 
-        IAsyncEnumerable<TestAsyncItem> stream1 = mediator.Stream(new TestStreamUniversalRequest());
-        IAsyncEnumerable<TestAsyncItem> stream2 = mediator.Stream(new SpecifyStreamValuesRequest() { RangeStart = 40, RangeCount = 3 });
+        IAsyncEnumerable<TestAsyncItem> stream1 = mediator.StreamAsync(new TestStreamUniversalRequest());
+        IAsyncEnumerable<TestAsyncItem> stream2 = mediator.StreamAsync(new SpecifyStreamValuesRequest() { RangeStart = 40, RangeCount = 3 });
 
         var list1 = new List<TestAsyncItem>();
         await foreach (TestAsyncItem item in stream1)
@@ -418,8 +418,8 @@ public class MediatorTest
         IMediator mediator = serviceProvider.GetRequiredService<IMediator>();
         RequestSequenceCache cache = serviceProvider.GetRequiredService<RequestSequenceCache>();
 
-        IAsyncEnumerable<TestAsyncItem> stream1 = mediator.Stream(new TestStreamUniversalRequest());
-        IAsyncEnumerable<TestAsyncItem> stream2 = mediator.Stream(new SpecifyStreamValuesRequest() { RangeStart = 40, RangeCount = 3 });
+        IAsyncEnumerable<TestAsyncItem> stream1 = mediator.StreamAsync(new TestStreamUniversalRequest());
+        IAsyncEnumerable<TestAsyncItem> stream2 = mediator.StreamAsync(new SpecifyStreamValuesRequest() { RangeStart = 40, RangeCount = 3 });
 
         var list1 = new List<TestAsyncItem>();
         await foreach (TestAsyncItem item in stream1)
@@ -451,8 +451,8 @@ public class MediatorTest
         IMediator mediator = serviceProvider.GetRequiredService<IMediator>();
         RequestSequenceCache cache = serviceProvider.GetRequiredService<RequestSequenceCache>();
 
-        IAsyncEnumerable<TestAsyncItem> stream1 = mediator.Stream(new TestStreamUniversalRequest());
-        IAsyncEnumerable<TestAsyncItem> stream2 = mediator.Stream(new SpecifyStreamValuesRequest() { RangeStart = 40, RangeCount = 3 });
+        IAsyncEnumerable<TestAsyncItem> stream1 = mediator.StreamAsync(new TestStreamUniversalRequest());
+        IAsyncEnumerable<TestAsyncItem> stream2 = mediator.StreamAsync(new SpecifyStreamValuesRequest() { RangeStart = 40, RangeCount = 3 });
 
         var list1 = new List<TestAsyncItem>();
         await foreach (TestAsyncItem item in stream1)

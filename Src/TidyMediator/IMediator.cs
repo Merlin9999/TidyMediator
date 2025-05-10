@@ -41,9 +41,9 @@ namespace TidyMediator
 
     public interface IMediator
     {
-        Task<TResult> Send<TResult>(IRequest<TResult> request, CancellationToken cancellationToken = default);
-        Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default) where TNotification : INotification;
-        IAsyncEnumerable<TItem> Stream<TItem>(IStreamRequest<TItem> request, CancellationToken cancellationToken = default);
+        Task<TResult> SendAsync<TResult>(IRequest<TResult> request, CancellationToken cancellationToken = default);
+        Task PublishAsync<TNotification>(TNotification notification, CancellationToken cancellationToken = default) where TNotification : INotification;
+        IAsyncEnumerable<TItem> StreamAsync<TItem>(IStreamRequest<TItem> request, CancellationToken cancellationToken = default);
     }
     
     public struct Unit

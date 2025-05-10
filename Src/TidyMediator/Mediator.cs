@@ -18,7 +18,7 @@ namespace TidyMediator
             this._pipelineBuilder = pipelineBuilder;
         }
 
-        public Task<TResult> Send<TResult>(IRequest<TResult> request, CancellationToken cancellationToken = default)
+        public Task<TResult> SendAsync<TResult>(IRequest<TResult> request, CancellationToken cancellationToken = default)
         {
             var requestType = request.GetType();
             var handlerType = typeof(IRequestHandler<,>).MakeGenericType(requestType, typeof(TResult));
@@ -42,7 +42,7 @@ namespace TidyMediator
             return pipeline();
         }
 
-        public async Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default) where TNotification : INotification
+        public async Task PublishAsync<TNotification>(TNotification notification, CancellationToken cancellationToken = default) where TNotification : INotification
         {
             var handlers = this._serviceProvider.GetServices<INotificationHandler<TNotification>>().ToList();
             var behaviorInfos = this._pipelineBuilder.ResolveForRequest(typeof(TNotification), isAsync: false);
@@ -67,7 +67,7 @@ namespace TidyMediator
             await pipeline();
         }
 
-        public IAsyncEnumerable<TItem> Stream<TItem>(IStreamRequest<TItem> request, CancellationToken cancellationToken = default)
+        public IAsyncEnumerable<TItem> StreamAsync<TItem>(IStreamRequest<TItem> request, CancellationToken cancellationToken = default)
         {
             var requestType = request.GetType();
             var handlerType = typeof(IStreamRequestHandler<,>).MakeGenericType(requestType, typeof(TItem));
