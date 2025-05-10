@@ -31,13 +31,13 @@ namespace TidyMediator
                 .Cast<dynamic>()
                 .ToList();
 
-            async Task<TResult> HandlerDelegate() => await handler.Handle((dynamic)request, cancellationToken);
+            async Task<TResult> HandlerDelegate() => await handler.HandleAsync((dynamic)request, cancellationToken);
 
             var pipeline = behaviors
                 .AsEnumerable()
                 .Reverse()
                 .Aggregate((RequestHandlerDelegate<TResult>)HandlerDelegate,
-                    (next, behavior) => async () => await behavior.Handle((dynamic)request, next, cancellationToken));
+                    (next, behavior) => async () => await behavior.HandleAsync((dynamic)request, next, cancellationToken));
 
             return pipeline();
         }
@@ -55,11 +55,11 @@ namespace TidyMediator
                 .AsEnumerable()
                 .Reverse()
                 .Aggregate((RequestHandlerDelegate<Unit>)HandlerDelegate,
-                    (next, behavior) => async () => await behavior.Handle(notification, next, cancellationToken));
+                    (next, behavior) => async () => await behavior.HandleAsync(notification, next, cancellationToken));
             
             async Task<Unit> HandlerDelegate()
             {
-                var tasks = handlers.Select(handler => handler.Handle(notification, cancellationToken));
+                var tasks = handlers.Select(handler => handler.HandleAsync(notification, cancellationToken));
                 await Task.WhenAll(tasks);
                 return Unit.Value;
             }
@@ -80,12 +80,12 @@ namespace TidyMediator
                 .Cast<dynamic>()
                 .ToList();
 
-            Func<IAsyncEnumerable<TItem>> pipeline = () => handler.Handle((dynamic)request, cancellationToken);
+            Func<IAsyncEnumerable<TItem>> pipeline = () => handler.HandleAsync((dynamic)request, cancellationToken);
 
             foreach (dynamic behavior in behaviors.AsEnumerable().Reverse())
             {
                 Func<IAsyncEnumerable<TItem>> current = pipeline;
-                pipeline = () => behavior.Handle((dynamic)request, current, cancellationToken);
+                pipeline = () => behavior.HandleAsync((dynamic)request, current, cancellationToken);
             }
 
             return pipeline();

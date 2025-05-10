@@ -16,7 +16,7 @@ namespace TidyMediator.Internal
             this._syncContextNotificationDispatcher = syncContextNotificationDispatcher;
         }
 
-        public async Task Handle(TNotification notification, CancellationToken cancellationToken)
+        public async Task HandleAsync(TNotification notification, CancellationToken cancellationToken)
         {
             await this._notificationDispatcher.CallHandlers(notification);
             await this._syncContextNotificationDispatcher.CallHandlers(notification);

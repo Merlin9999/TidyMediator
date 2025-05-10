@@ -492,7 +492,7 @@ public record TestUniversalRequest : IRequest<TestResponse>
 
 public class TestUniversalRequestHandler : IRequestHandler<TestUniversalRequest, TestResponse>
 {
-    public Task<TestResponse> Handle(TestUniversalRequest request, CancellationToken cancellationToken)
+    public Task<TestResponse> HandleAsync(TestUniversalRequest request, CancellationToken cancellationToken)
     {
         return Task.FromResult(new TestResponse() { Answer = 42m });
     }
@@ -505,7 +505,7 @@ public record SpecifyValueRequest : IRequest<TestResponse>
 
 public class SpecifyValueHandler : IRequestHandler<SpecifyValueRequest, TestResponse>
 {
-    public Task<TestResponse> Handle(SpecifyValueRequest request, CancellationToken cancellationToken)
+    public Task<TestResponse> HandleAsync(SpecifyValueRequest request, CancellationToken cancellationToken)
     {
         return Task.FromResult(new TestResponse() { Answer = request.ValueToReturn });
     }
@@ -523,7 +523,7 @@ public class TestNotification2 : INotification { }
 
 public class Test1NotificationHandler(NotificationCounter notificationCounter) : INotificationHandler<TestNotification>
 {
-    public Task Handle(TestNotification notification, CancellationToken cancellationToken)
+    public Task HandleAsync(TestNotification notification, CancellationToken cancellationToken)
     {
         notificationCounter.Increment();
         return Task.CompletedTask;
@@ -531,7 +531,7 @@ public class Test1NotificationHandler(NotificationCounter notificationCounter) :
 }
 public class Test2NotificationHandler(NotificationCounter notificationCounter) : INotificationHandler<TestNotification>
 {
-    public Task Handle(TestNotification notification, CancellationToken cancellationToken)
+    public Task HandleAsync(TestNotification notification, CancellationToken cancellationToken)
     {
         notificationCounter.Increment();
         return Task.CompletedTask;
@@ -549,7 +549,7 @@ public class RequestSequenceCache
 
 public class RequestTrackingBehavior<TRequest, TResponse>(RequestSequenceCache cache) : IPipelineBehavior<TRequest, TResponse>
 {
-    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+    public async Task<TResponse> HandleAsync(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
         cache.AddInType(typeof(TRequest));
         var response = await next();
@@ -561,7 +561,7 @@ public class RequestTrackingBehavior<TRequest, TResponse>(RequestSequenceCache c
 
 public class RequestStreamTrackingBehavior<TRequest, TItem>(RequestSequenceCache cache) : IStreamPipelineBehavior<TRequest, TItem>
 {
-    public async IAsyncEnumerable<TItem> Handle(TRequest request, Func<IAsyncEnumerable<TItem>> next, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public async IAsyncEnumerable<TItem> HandleAsync(TRequest request, Func<IAsyncEnumerable<TItem>> next, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         cache.AddInType(typeof(TRequest));
 
@@ -586,7 +586,7 @@ public record TestStreamUniversalRequest : IStreamRequest<TestAsyncItem>
 
 public class TestStreamUniversalRequestHandler : IStreamRequestHandler<TestStreamUniversalRequest, TestAsyncItem>
 {
-    public async IAsyncEnumerable<TestAsyncItem> Handle(TestStreamUniversalRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<TestAsyncItem> HandleAsync(TestStreamUniversalRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         IEnumerable<int> range = Enumerable.Range(41, 3);
         foreach (int i in range)
@@ -605,7 +605,7 @@ public record SpecifyStreamValuesRequest : IStreamRequest<TestAsyncItem>
 
 public class SpecifyStreamValuesHandler : IStreamRequestHandler<SpecifyStreamValuesRequest, TestAsyncItem>
 {
-    public async IAsyncEnumerable<TestAsyncItem> Handle(SpecifyStreamValuesRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<TestAsyncItem> HandleAsync(SpecifyStreamValuesRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         IEnumerable<int> range = Enumerable.Range(request.RangeStart, request.RangeCount);
         foreach (int i in range)
