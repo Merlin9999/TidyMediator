@@ -130,7 +130,7 @@ namespace TidyMediator
                 case Mode.Exclude:
                     return !this.TargetTypes.Contains(requestType);
                 default:
-                    throw new NotImplementedException($"{nameof(this.RegistrationMode)}.{this.RegistrationMode} is not recognized!");
+                    throw new NotSupportedException($"{nameof(Mode)}.{this.RegistrationMode} is not recognized!");
             }
         }
     }

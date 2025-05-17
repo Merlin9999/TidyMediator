@@ -2,6 +2,17 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>Tidy Mediator</Title>
+    <Version>0.9.0</Version>
+    <Authors>Marc Behnke</Authors>
+    <Description>A messaging system supporting commands, queries, and notifications. Message handlers are registered in a dependency injection system with handlers registered as transient. 
+
+Command and query request messages allow only one handler implementation per request type. Notifications allow zero or more notification handlers. Additionally, notification delegate handlers can be registered by singleton objects or other instanciated objects. Such registered delegates can optionally be scheduled on synchronization contexts, enabling those handlers to be scheduled on to UI threads.</Description>
+    <Copyright>Copyright © 2025 Marc Behnke</Copyright>
+    <PackageProjectUrl>https://github.com/Merlin9999/TidyMediator</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Merlin9999/TidyMediator</RepositoryUrl>
+    <PackageReleaseNotes>0.9.0  Initial NuGet Version</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
@@ -10,5 +21,9 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.4" />
     <PackageReference Include="System.Collections.Immutable" Version="9.0.4" />
   </ItemGroup>
+
+  <Target Name="CopyNupkg" AfterTargets="Pack">
+    <Copy SourceFiles="$(PackageOutputPath)\$(PackageId).$(Version).nupkg" DestinationFolder="C:\Fls\Local-NuGet" />
+  </Target>
 
 </Project>
