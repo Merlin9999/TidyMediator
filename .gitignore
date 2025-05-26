@@ -399,5 +399,9 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 
-# Nuke Build
-.nuke/
+# NUKE Build - ignore local machine-specific config
+.nuke/parameters.json
+
+# NUKE Build - optional Rider plugin user settings
+.nuke/host.json.user
+
