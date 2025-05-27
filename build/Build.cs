@@ -28,6 +28,7 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
     EnableGitHubToken = true,
     ImportSecrets = [nameof(NuGetOrgApiKey)],
     OnPushBranches = ["main"],
+    OnWorkflowDispatchOptionalInputs = ["name"],
     InvokedTargets = [nameof(Publish)])]
 class Build : NukeBuild
 {

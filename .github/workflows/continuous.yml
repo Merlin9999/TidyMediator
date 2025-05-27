@@ -20,6 +20,11 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      name:
+        description: "name"
+        required: false
 
 jobs:
   windows-latest:
@@ -39,5 +44,6 @@ jobs:
       - name: 'Run: Publish'
         run: ./build.cmd Publish
         env:
+          name: ${{ github.event.inputs.name }}
           NuGetOrgApiKey: ${{ secrets.NUGET_ORG_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
