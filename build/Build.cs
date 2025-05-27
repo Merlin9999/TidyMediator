@@ -21,14 +21,14 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
 // Nuke Build Documentation: https://nuke.build/docs/introduction/
 
-//[GitHubActions(
-//    "continuous",
-//    GitHubActionsImage.WindowsLatest,
-//    FetchDepth = 0,
-//    EnableGitHubToken = true,
-//    ImportSecrets = [nameof(NuGetOrgApiKey)],
-//    OnPushBranches = ["main"],
-//    InvokedTargets = [nameof(Publish)])]
+[GitHubActions(
+    "continuous",
+    GitHubActionsImage.WindowsLatest,
+    FetchDepth = 0,
+    EnableGitHubToken = true,
+    ImportSecrets = [nameof(NuGetOrgApiKey)],
+    OnPushBranches = ["main"],
+    InvokedTargets = [nameof(Publish)])]
 class Build : NukeBuild
 {
     /// Support plugins are available for:
