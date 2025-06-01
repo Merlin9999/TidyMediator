@@ -6,7 +6,7 @@ namespace TidyMediator
 {
     /// <summary>
     /// Notification registry for registering and dispatching notifications to notification handlers where the
-    /// handlers are delegates attached to objects that are NOT maintained by the DI container.
+    /// handlers are delegates attached to objects that are singletons or are NOT maintained by the DI container.
     /// </summary>
     public class NotificationRegistry : AbstractNotificationRegistry<NotificationRegistry>
     {
