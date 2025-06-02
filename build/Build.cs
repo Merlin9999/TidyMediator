@@ -14,6 +14,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Web;
+using Serilog;
 using static Nuke.Common.EnvironmentInfo;
 using static Nuke.Common.IO.FileSystemTasks;
 using static Nuke.Common.IO.PathConstruction;
@@ -29,7 +30,7 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
     ImportSecrets = [nameof(NuGetOrgApiKey)],
     OnPushBranches = ["main"],
     OnWorkflowDispatchOptionalInputs = ["name"],
-    InvokedTargets = [nameof(Publish)])]
+    InvokedTargets = [nameof(Publish), nameof(ShowInfo)])]
 class Build : NukeBuild
 {
     /// Support plugins are available for:
@@ -58,6 +59,7 @@ class Build : NukeBuild
 
     AbsolutePath SourceDirectory => RootDirectory / "Src";
     AbsolutePath OutputDirectory => RootDirectory / "Output";
+    AbsolutePath LocalNuGetSourceDirectory => "C:/Fls/Local-NuGet";
 
     string NugetOrgFeed => "https://api.nuget.org/v3/index.json";
     static GitHubActions GitHubActions => GitHubActions.Instance;
@@ -65,6 +67,57 @@ class Build : NukeBuild
         ? $"https://nuget.pkg.github.com/{GitHubActions.RepositoryOwner}/index.json"
         : null;
     
+    Target ShowInfo => _ => _
+        .Before(Clean)
+        .Before(Restore)
+        .Executes(() =>
+        {
+            string LocalOrRemoteText() => IsLocalBuild ? "Local Build" : "Remote (CI/CD) Build";
+
+            Log.Information("Standard GitVersion Formats:");
+            Log.Information($"                         SemVer: {GitVersion.SemVer}");
+            Log.Information($"                     FullSemVer: {GitVersion.FullSemVer}");
+            Log.Information($"                   LegacySemVer: {GitVersion.LegacySemVer}");
+            Log.Information($"             LegacySemVerPadded: {GitVersion.LegacySemVerPadded}\n");
+
+            Log.Information("Standard GitVersion Assembly Formats:");
+            Log.Information($"                 AssemblySemVer: {GitVersion.AssemblySemVer}");
+            Log.Information($"             AssemblySemFileVer: {GitVersion.AssemblySemFileVer}");
+            Log.Information($"           InformationalVersion: {GitVersion.InformationalVersion}\n");
+
+            Log.Information("Standard GitVersion NuGet Formats:");
+            Log.Information($"                   NuGetVersion: {GitVersion.NuGetVersion}");
+            Log.Information($"                 NuGetVersionV2: {GitVersion.NuGetVersionV2}");
+            Log.Information($"             NuGetPreReleaseTag: {GitVersion.NuGetPreReleaseTag}");
+            Log.Information($"           NuGetPreReleaseTagV2: {GitVersion.NuGetPreReleaseTagV2}\n");
+
+            Log.Information("Other GitVersion Information:");
+            Log.Information($"                     BranchName: {GitVersion.BranchName}");
+            Log.Information($"                  BuildMetaData: {GitVersion.BuildMetaData}");
+            Log.Information($"            BuildMetaDataPadded: {GitVersion.BuildMetaDataPadded}");
+            Log.Information($"      CommitsSinceVersionSource: {GitVersion.CommitsSinceVersionSource}");
+            Log.Information($"CommitsSinceVersionSourcePadded: {GitVersion.CommitsSinceVersionSourcePadded}");
+            Log.Information($"                     CommitDate: {GitVersion.CommitDate}");
+            Log.Information($"             UncommittedChanges: {GitVersion.UncommittedChanges}");
+            Log.Information($"               VersionSourceSha: {GitVersion.VersionSourceSha}");
+            Log.Information($"                            Sha: {GitVersion.Sha}");
+            Log.Information($"                       ShortSha: {GitVersion.ShortSha}\n");
+
+            Log.Information("Build Configuration Information:");
+            Log.Information($"  Local or Remote (CI/CD) Build: {LocalOrRemoteText()}");
+            //Log.Information($"        Configuration by Branch: {GetBranchBasedConfiguration()}");
+            Log.Information($"            Final Configuration: {Configuration}\n");
+
+            Log.Information($"Generic Version Information:");
+            Log.Information($"                MajorMinorPatch: {GitVersion.MajorMinorPatch}");
+            Log.Information($"                  PreReleaseTag: {GitVersion.PreReleaseTag}");
+            Log.Information($"                PreReleaseLabel: {GitVersion.PreReleaseLabel}");
+            Log.Information($"               PreReleaseNumber: {GitVersion.PreReleaseNumber}");
+            Log.Information($"       WeightedPreReleaseNumber: {GitVersion.WeightedPreReleaseNumber}");
+            Log.Information($"              FullBuildMetaData: {GitVersion.FullBuildMetaData}");
+        });
+
+
     Target Clean => _ => _
         .Before(Restore)
         .Executes(() =>
@@ -85,21 +138,21 @@ class Build : NukeBuild
         .DependsOn(Restore)
         .Executes(() =>
         {
-            DotNetBuild(s => s
-                .SetProjectFile(Solution)
-                .SetConfiguration(Configuration)
-                .EnableNoRestore());
+            //DotNetBuild(s => s
+            //    .SetProjectFile(Solution)
+            //    .SetConfiguration(Configuration)
+            //    .EnableNoRestore());
 
             DotNetBuild(s => s
                 .SetProjectFile(Solution)
                 .SetConfiguration(Configuration)
                 .EnableNoRestore()
                 .SetCopyright(BuildCopyright())
-                //.SetVersion(GitVersion.NuGetVersion)
-                //.SetAssemblyVersion(GitVersion.AssemblySemVer)
-                //.SetFileVersion(GitVersion.AssemblySemFileVer)
-                //.SetVersionPrefix(GitVersion.MajorMinorPatch)
-                //.SetVersionSuffix(GitVersion.PreReleaseTag)
+                .SetVersion(GitVersion.NuGetVersion)
+                .SetAssemblyVersion(GitVersion.AssemblySemVer)
+                .SetFileVersion(GitVersion.AssemblySemFileVer)
+                .SetVersionPrefix(GitVersion.MajorMinorPatch)
+                .SetVersionSuffix(GitVersion.PreReleaseTag)
                 .AddProperty("IncludeSourceRevisionInInformationalVersion", Configuration != Configuration.Release));
 
         });
@@ -128,14 +181,25 @@ class Build : NukeBuild
                 .EnableNoRestore()
                 .EnableNoBuild()
                 .SetCopyright(BuildCopyright())
-                //.SetVersion(GitVersion.NuGetVersionV2)
-                //.SetAssemblyVersion(GitVersion.AssemblySemVer)
-                //.SetFileVersion(GitVersion.AssemblySemFileVer)
-                //.SetVersionPrefix(GitVersion.MajorMinorPatch)
-                //.SetVersionSuffix(GitVersion.PreReleaseTag)
+                .SetVersion(GitVersion.NuGetVersionV2)
+                .SetAssemblyVersion(GitVersion.AssemblySemVer)
+                .SetFileVersion(GitVersion.AssemblySemFileVer)
+                .SetVersionPrefix(GitVersion.MajorMinorPatch)
+                .SetVersionSuffix(GitVersion.PreReleaseTag)
                 .AddProperty("IncludeSourceRevisionInInformationalVersion", Configuration != Configuration.Release)
                 .SetOutputDirectory(OutputDirectory)
             );
+        });
+
+    Target PublishToLocalNuGet => _ => _
+        .Description($"Publishing Tools Package to a local NuGet Feed Folder.")
+        .DependsOn(Pack)
+        .OnlyWhenDynamic(() => IsLocalBuild)
+        .Executes(() =>
+        {
+            LocalNuGetSourceDirectory.CreateDirectory();
+            OutputDirectory.GlobFiles("*.nupkg")
+                .ForEach(pkgFile => File.Copy(pkgFile, LocalNuGetSourceDirectory / pkgFile.Name, true));
         });
 
     // Examples at: https://anktsrkr.github.io/post/manage-your-package-release-using-nuke-in-github/
@@ -176,10 +240,12 @@ class Build : NukeBuild
                     );
                 });
         });
-
+		
     Target Publish => _ => _
         .Description("Publish NuGet Package to location depending on if this is a local or remote server build.")
+        .Triggers(PublishToLocalNuGet)
         .Triggers(PublishToNuGetOrg)
+        .Triggers(PublishGitHubNuGet)
         .Executes(() =>
         {
         });
@@ -189,7 +255,7 @@ class Build : NukeBuild
         base.OnBuildInitialized();
 
         Configuration = GetConfigurationOverrideParameters() ??
-                        GetDefaultConfiguration();
+            GetBranchBasedConfiguration();
 
         Assert.True(Configuration != null,
             "Unable to determine configuration by branch or local override parameter!");
@@ -219,6 +285,23 @@ class Build : NukeBuild
         return null;
     }
 
+    private Configuration GetBranchBasedConfiguration()
+    {
+        return GitVersion.BranchName switch
+        {
+            "develop" => Configuration.Debug,
+            string s when s.StartsWith("feature/") => Configuration.Debug,
+
+            "main" => Configuration.Release,
+            string s when s.StartsWith("release/") => Configuration.Release,
+            string s when s.StartsWith("hotfix/") => Configuration.Release,
+
+            null => throw new Exception("Unable to determine the git branch!"),
+            string unrecognizedBranch => throw new Exception(
+                $"Unable to determine build configuration from branch name \"{unrecognizedBranch}\""),
+        };
+    }
+	
     static Configuration GetDefaultConfiguration()
     {
         return IsLocalBuild ? Configuration.Debug : Configuration.Release;
