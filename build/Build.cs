@@ -30,7 +30,7 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
     ImportSecrets = [nameof(NuGetOrgApiKey)],
     OnPushBranches = ["main"],
     OnWorkflowDispatchOptionalInputs = ["name"],
-    InvokedTargets = [nameof(Publish), nameof(ShowInfo)])]
+    InvokedTargets = [nameof(ShowInfo), nameof(Publish)])]
 class Build : NukeBuild
 {
     /// Support plugins are available for:
@@ -59,7 +59,7 @@ class Build : NukeBuild
 
     AbsolutePath SourceDirectory => RootDirectory / "Src";
     AbsolutePath OutputDirectory => RootDirectory / "Output";
-    AbsolutePath LocalNuGetSourceDirectory => "C:/Fls/Local-NuGet";
+    AbsolutePath LocalNuGetSourceDirectory => @"C:\Fls\Local-NuGet";
 
     string NugetOrgFeed => "https://api.nuget.org/v3/index.json";
     static GitHubActions GitHubActions => GitHubActions.Instance;
@@ -245,7 +245,7 @@ class Build : NukeBuild
         .Description("Publish NuGet Package to location depending on if this is a local or remote server build.")
         .Triggers(PublishToLocalNuGet)
         .Triggers(PublishToNuGetOrg)
-        .Triggers(PublishGitHubNuGet)
+        //.Triggers(PublishGitHubNuGet)
         .Executes(() =>
         {
         });
