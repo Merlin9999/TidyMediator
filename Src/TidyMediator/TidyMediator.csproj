@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>Tidy Mediator</Title>
-    <Version>0.9.0</Version>
+    <Version>$(VersionPrefix)</Version>
     <Authors>Marc Behnke</Authors>
     <Description>A messaging system supporting commands, queries, and notifications. Message handlers are registered in a dependency injection system with handlers registered as transient. 
 
@@ -12,7 +12,10 @@ Command and query request messages allow only one handler implementation per req
     <Copyright>Copyright © 2025 Marc Behnke</Copyright>
     <PackageProjectUrl>https://github.com/Merlin9999/TidyMediator</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Merlin9999/TidyMediator</RepositoryUrl>
-    <PackageReleaseNotes>0.9.0  Initial NuGet Version</PackageReleaseNotes>
+    <PackageReleaseNotes>
+      0.9.1  Xml Doc Comments updated.
+      0.9.0  Initial NuGet Version.
+    </PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,8 +25,10 @@ Command and query request messages allow only one handler implementation per req
     <PackageReference Include="System.Collections.Immutable" Version="9.0.4" />
   </ItemGroup>
 
+  <!--
   <Target Name="CopyNupkg" AfterTargets="Pack">
     <Copy SourceFiles="$(PackageOutputPath)\$(PackageId).$(Version).nupkg" DestinationFolder="C:\Fls\Local-NuGet" />
   </Target>
+  -->
 
 </Project>

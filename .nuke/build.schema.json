@@ -29,8 +29,10 @@
         "Pack",
         "Publish",
         "PublishGitHubNuGet",
+        "PublishToLocalNuGet",
         "PublishToNuGetOrg",
         "Restore",
+        "ShowInfo",
         "UnitTest"
       ]
     },
