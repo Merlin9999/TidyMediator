@@ -1,7 +1,55 @@
-assembly-versioning-scheme: MajorMinorPatch
 mode: ContinuousDeployment
+assembly-versioning-scheme: MajorMinorPatch
 next-version: 0.9.1
-branches: {}
+
+branches:
+  main:
+    regex: ^main$
+    label: ''
+    increment: none
+    source-branches: ['release', 'hotfix']
+    is-release-branch: false
+
+  release:
+    regex: ^release[/-]
+    label: 'beta'
+    increment: none
+    source-branches: ['develop', 'main']
+    is-release-branch: true
+    tracks-release-branches: true
+
+  hotfix:
+    regex: ^hotfix[/-]
+    label: 'hotfix'
+    increment: none
+    source-branches: ['main', 'develop']
+    is-release-branch: true
+
+  develop:
+    regex: ^develop$
+    label: 'alpha'
+    increment: minor
+    source-branches: ['main']
+    is-release-branch: false
+
+  feature:
+    regex: ^feature[/-]
+    label: 'alpha'
+    increment: minor
+    source-branches: ['develop']
+    is-release-branch: false
+    track-merge-target: false
+    track-merge-message: false
+
+  # Catch-all for misc branches, follows develop pattern
+  default:
+    regex: .*
+    label: 'alpha'
+    increment: minor
+    source-branches: ['develop', 'main']
+    is-release-branch: false
+
 ignore:
   sha: []
+
 merge-message-formats: {}
