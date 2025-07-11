@@ -12,10 +12,7 @@ Command and query request messages allow only one handler implementation per req
     <Copyright>Copyright © 2025 Marc Behnke</Copyright>
     <PackageProjectUrl>https://github.com/Merlin9999/TidyMediator</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Merlin9999/TidyMediator</RepositoryUrl>
-    <PackageReleaseNotes>
-      0.9.1  Xml Doc Comments updated.
-      0.9.0  Initial NuGet Version.
-    </PackageReleaseNotes>
+    <PackageReleaseNotes></PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
