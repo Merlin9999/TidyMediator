@@ -158,16 +158,16 @@ class Build : NukeBuild
         });
 
     Target UnitTest => _ => _
-    .DependsOn(Compile)
-    .Executes(() =>
-    {
-        DotNetTest(x => x
-            .SetProjectFile(Solution)
-            .SetConfiguration(Configuration)
-            .EnableNoRestore()
-            .EnableNoBuild()
-        );
-    });
+        .DependsOn(Compile)
+        .Executes(() =>
+        {
+            DotNetTest(x => x
+                .SetProjectFile(Solution)
+                .SetConfiguration(Configuration)
+                .EnableNoRestore()
+                .EnableNoBuild()
+            );
+        });
 
     Target Pack => _ => _
         .DependsOn(Clean)
@@ -265,7 +265,7 @@ class Build : NukeBuild
     {
         CultureInfo enUS = new CultureInfo("en-US");
         DateTime date = DateTime.ParseExact(GitVersion.CommitDate, "yyyy-MM-dd", enUS, DateTimeStyles.None);
-        string copyright = $"Copyright (c) {date.Year} Marc Behnke, All Rights Reserved"
+        string copyright = $"Copyright (c) {date.Year} Marc Behnke"
             .Replace(",", HttpUtility.UrlEncode(","));
         return copyright;
     }
