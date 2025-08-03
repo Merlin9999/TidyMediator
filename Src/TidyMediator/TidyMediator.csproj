@@ -13,6 +13,8 @@ Command and query request messages allow only one handler implementation per req
     <PackageProjectUrl>https://github.com/Merlin9999/TidyMediator</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Merlin9999/TidyMediator</RepositoryUrl>
     <PackageReleaseNotes></PackageReleaseNotes>
+    <IncludeSymbols>False</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
